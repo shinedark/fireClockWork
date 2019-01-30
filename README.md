@@ -11,3 +11,5 @@ todo
 6. Style everything 
 7. Publish to expo
 
+clock code tutorial https://tutorialscapital.com/react-native-create-live-digital-clock-using-local-system-time-android-ios-tutorial/
+
