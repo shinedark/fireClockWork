@@ -1,66 +1,7 @@
 import React, { Component } from 'react';
-import { connect } from  'react-redux';
+import firebase from 'firebase';
 import { View , Text , ScrollView, TextInput , Button } from 'react-native';
-import { employeeUpdate } from '../actions';
 import { CardSection, Input } from './common';
-
-// class EmployeeForm extends Component {
-	
-// 	render (){
-// 		return (
-// 			<View style={styles.container}>
-// 				<CardSection>
-// 					<Input 
-// 						label="Club"
-// 						placeholder="6 iron"
-// 						value={this.props.name}
-// 						onChangeText={value => this.props.employeeUpdate({prop: 'name', value})}
-// 					/>
-// 				</CardSection>
-
-// 				<CardSection>
-// 					<Input
-// 						label="Distance"
-// 						placeholder="150 To 160"
-// 						value={this.props.phone}
-// 						onChangeText={value => this.props.employeeUpdate({prop: 'phone', value})}
-// 					/>
-// 				</CardSection>
-
-// 				<CardSection style={{ flexDirection:'column'}}>
-// 					<ScrollView>
-// 						<TextInput
-// 							style={{ flexDirection:'column', flex: 1 , height: 90, fontSize: 16}}
-// 							multiline = {true}
-// 							numberOfLines = {6}
-// 							label="Notes"
-							
-// 							placeholder="Ball closer to the left foot"
-// 							value={this.props.shift}
-// 							onChangeText={value => this.props.employeeUpdate({prop: 'shift', value})}
-// 						/>
-// 					</ScrollView>
-					
-// 				</CardSection>
-// 			</View>
-// 		);
-
-// 	}
-// }
-
-
-
-// const mapStateToProps = ( state ) => {
-// 	const { name, phone, shift } = state.employeeForm;
-
-// 	return { name, phone, shift};
-// };
-
-
-// export default connect(mapStateToProps, {employeeUpdate})(EmployeeForm);
-
-
-
 
 export default class EmployeeForm extends React.Component {
 
@@ -69,13 +10,15 @@ export default class EmployeeForm extends React.Component {
       this.state = {
        currentTime: null, 
        currentDay: null ,
+       hoursWorked: '',
+
     }
     this.daysArray = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
   }
 
   componentWillMount(){
     this.getCurrentTime();
-
+    this.calculateHW();
   }
 
   componentDidMount(){
@@ -89,17 +32,43 @@ export default class EmployeeForm extends React.Component {
   }
 
   clockIn = () => {
+    const { currentUser } = firebase.auth();
     const currentTimeClockIn = this.state.currentTime;
-    const ref = firebase.database().ref('Clock In').update({
-      [currentTimeClockIn] : true
-    })
+    firebase.database().ref(`/users/${currentUser.uid}/clockIn`)
+        .push({ currentTimeClockIn})
   }
 
   clockOut = () => {
+    const { currentUser } = firebase.auth();
     const currentTimeClockOut = this.state.currentTime;
-    const ref = firebase.database().ref('Clocked Out').update({
-      [currentTimeClockOut] : true
-    })
+    firebase.database().ref(`/users/${currentUser.uid}/clockOut`)
+        .push({ currentTimeClockOut})
+  }
+
+  calculateHW = () => {
+    const { currentUser } = firebase.auth();
+    firebase.database().ref(`/users/${currentUser.uid}/clockIn`).orderByKey().limitToLast(1)
+      .once('value', snapshot => {
+        snapshot.forEach(function(childSnapshot) {
+            const childKey = childSnapshot.key;
+            const childDataClockIn = childSnapshot.val();
+            
+            // console.log(childDataClockIn);
+          });
+        // console.log(snapshot.key);
+
+      });
+      firebase.database().ref(`/users/${currentUser.uid}/clockOut`).orderByKey().limitToLast(1)
+        .once('value', snapshot => {
+          snapshot.forEach(function(childSnapshot) {
+              const childKey = childSnapshot.key;
+              const childDataClockOut = childSnapshot.val();
+
+              // console.log(childDataClockOut);
+            });
+          // console.log(snapshot.key);
+
+        });
 
   }
 
@@ -157,7 +126,7 @@ export default class EmployeeForm extends React.Component {
           </View>
           <Button title="Clock In" onPress={this.clockIn}></Button>
           <Button title="Clock Out" onPress={this.clockOut}></Button>
-          <View><Text>Hours Worked </Text></View>
+          <View><Text>Hours Worked:{this.hoursWorked} </Text></View>
         </ScrollView>
       </View>
     );
