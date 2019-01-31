@@ -10,8 +10,9 @@ export default class EmployeeForm extends React.Component {
       this.state = {
        currentTime: null, 
        currentDay: null ,
-       hoursWorked: '',
-
+       hoursWorked: 0,
+       timeOut: 0,
+       timeIn: 0,
     }
     this.daysArray = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
   }
@@ -19,12 +20,15 @@ export default class EmployeeForm extends React.Component {
   componentWillMount(){
     this.getCurrentTime();
     this.calculateHW();
+    
   }
 
   componentDidMount(){
+    
     this.timer = setInterval(() => {
             this.getCurrentTime();
         }, 1000);
+
   }
 
   componentWillUnmount(){
@@ -49,27 +53,39 @@ export default class EmployeeForm extends React.Component {
     const { currentUser } = firebase.auth();
     firebase.database().ref(`/users/${currentUser.uid}/clockIn`).orderByKey().limitToLast(1)
       .once('value', snapshot => {
-        snapshot.forEach(function(childSnapshot) {
+        snapshot.forEach((childSnapshot) => {
             const childKey = childSnapshot.key;
             const childDataClockIn = childSnapshot.val();
+            const hourIn = parseFloat(childDataClockIn.currentTimeClockIn);
+            this.setState({timeIn: this.state.timeIn + hourIn  });
             
-            // console.log(childDataClockIn);
+            
           });
-        // console.log(snapshot.key);
-
       });
       firebase.database().ref(`/users/${currentUser.uid}/clockOut`).orderByKey().limitToLast(1)
         .once('value', snapshot => {
-          snapshot.forEach(function(childSnapshot) {
+          snapshot.forEach((childSnapshot) => {
               const childKey = childSnapshot.key;
               const childDataClockOut = childSnapshot.val();
+              const hourOut = parseFloat(childDataClockOut.currentTimeClockOut);
+              this.setState({timeOut: this.state.timeOut + hourOut  });
 
-              // console.log(childDataClockOut);
+              console.log(hourOut);
             });
-          // console.log(snapshot.key);
-
         });
+      
+  };
 
+  calculateTotalHours = () => {
+    const startHour = this.state.timeIn;
+    const endHour = this.state.timeOut;
+    if (startHour === endHour) {
+      this.setState({hoursWorked: this.state.hoursWorked + 1  });
+    }
+    else{
+      //some logic to compare hours goes here
+    }
+    console.log(this.state.hoursWorked);
   }
 
   getCurrentTime = () =>
@@ -126,6 +142,10 @@ export default class EmployeeForm extends React.Component {
           </View>
           <Button title="Clock In" onPress={this.clockIn}></Button>
           <Button title="Clock Out" onPress={this.clockOut}></Button>
+          <View>
+            <Text>Clock In Time:{ this.state.timeIn }</Text>
+            <Text>Clock Out Time:{ this.state.timeOut }</Text>  
+          </View>
           <View><Text>Hours Worked:{this.hoursWorked} </Text></View>
         </ScrollView>
       </View>
