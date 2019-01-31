@@ -53,6 +53,9 @@ class Loginform extends Component {
 						value={this.props.password}
 					/>
 				</CardSection>
+				<CardSection>
+					<Text> use me@me.com with a password of password</Text>
+				</CardSection>
 
 				<Text style={styles.errorTextStyle}>
 					{this.props.error}
