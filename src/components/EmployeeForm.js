@@ -3,6 +3,7 @@ import firebase from 'firebase';
 import { View , Text , ScrollView, TextInput , Button } from 'react-native';
 import { CardSection, Input } from './common';
 
+
 export default class EmployeeForm extends React.Component {
 
   constructor(props) {
@@ -19,14 +20,13 @@ export default class EmployeeForm extends React.Component {
 
   componentWillMount(){
     this.getCurrentTime();
-    this.calculateHW();
-    
   }
 
   componentDidMount(){
-    
+
     this.timer = setInterval(() => {
             this.getCurrentTime();
+            this.addTimes();
         }, 1000);
 
   }
@@ -39,54 +39,81 @@ export default class EmployeeForm extends React.Component {
     const { currentUser } = firebase.auth();
     const currentTimeClockIn = this.state.currentTime;
     firebase.database().ref(`/users/${currentUser.uid}/clockIn`)
-        .push({ currentTimeClockIn})
+    .push({ currentTimeClockIn})
+    firebase.database().ref(`/users/${currentUser.uid}/clockIn`).orderByKey().limitToLast(1)
+      .once('value', snapshot => {
+        snapshot.forEach((childSnapshot) => {
+            const childKey = childSnapshot.key;
+            const childDataClockIn = childSnapshot.val();
+            const hourIn = childDataClockIn.currentTimeClockIn;
+            this.setState({timeIn: hourIn });
+            
+            
+          });
+      });
   }
 
   clockOut = () => {
     const { currentUser } = firebase.auth();
     const currentTimeClockOut = this.state.currentTime;
     firebase.database().ref(`/users/${currentUser.uid}/clockOut`)
-        .push({ currentTimeClockOut})
-  }
-
-  calculateHW = () => {
-    const { currentUser } = firebase.auth();
-    firebase.database().ref(`/users/${currentUser.uid}/clockIn`).orderByKey().limitToLast(1)
+    .push({ currentTimeClockOut})
+    firebase.database().ref(`/users/${currentUser.uid}/clockOut`).orderByKey().limitToLast(1)
       .once('value', snapshot => {
         snapshot.forEach((childSnapshot) => {
             const childKey = childSnapshot.key;
-            const childDataClockIn = childSnapshot.val();
-            const hourIn = parseFloat(childDataClockIn.currentTimeClockIn);
-            this.setState({timeIn: this.state.timeIn + hourIn  });
-            
-            
+            const childDataClockOut = childSnapshot.val();
+            const hourOut = childDataClockOut.currentTimeClockOut;
+            this.setState({timeOut: hourOut });
+
+            // console.log(hourOut);
           });
       });
-      firebase.database().ref(`/users/${currentUser.uid}/clockOut`).orderByKey().limitToLast(1)
-        .once('value', snapshot => {
-          snapshot.forEach((childSnapshot) => {
-              const childKey = childSnapshot.key;
-              const childDataClockOut = childSnapshot.val();
-              const hourOut = parseFloat(childDataClockOut.currentTimeClockOut);
-              this.setState({timeOut: this.state.timeOut + hourOut  });
-
-              console.log(hourOut);
-            });
-        });
-      
-  };
-
-  calculateTotalHours = () => {
-    const startHour = this.state.timeIn;
-    const endHour = this.state.timeOut;
-    if (startHour === endHour) {
-      this.setState({hoursWorked: this.state.hoursWorked + 1  });
-    }
-    else{
-      //some logic to compare hours goes here
-    }
-    console.log(this.state.hoursWorked);
   }
+
+  addTimes = () => {
+    const startTime = this.state.timeIn;
+    const endTime = this.state.timeOut;
+    
+    
+    var times = [ 0, 0, 0 ]
+    var max = times.length
+
+    var a = (startTime || '').split(':')
+    var b = (endTime || '').split(':')
+
+    // normalize time values
+    for (var i = 0; i < max; i++) {
+      a[i] = isNaN(parseInt(a[i])) ? 0 : parseInt(a[i])
+      b[i] = isNaN(parseInt(b[i])) ? 0 : parseInt(b[i])
+    }
+
+    // store time values
+    for (var i = 0; i < max; i++) {
+      times[i] = a[i] - b[i]
+    }
+
+    var hours = times[0]
+    var minutes = times[1]
+    var seconds = times[2]
+
+    if (seconds >= 60) {
+      var m = (seconds / 60) << 0
+      minutes += m
+      seconds -= 60 * m
+    }
+
+    if (minutes >= 60) {
+      var h = (minutes / 60) << 0
+      hours += h
+      minutes -= 60 * h
+    }
+
+    const totalTime = ('0' + hours).slice(-2) + ':' + ('0' + minutes).slice(-2) + ':' + ('0' + seconds).slice(-2)
+
+    this.setState({hoursWorked: totalTime })
+  }
+  
 
   getCurrentTime = () =>
   {
@@ -146,7 +173,7 @@ export default class EmployeeForm extends React.Component {
             <Text>Clock In Time:{ this.state.timeIn }</Text>
             <Text>Clock Out Time:{ this.state.timeOut }</Text>  
           </View>
-          <View><Text>Hours Worked:{this.hoursWorked} </Text></View>
+          <View><Text>Time Worked:{this.state.hoursWorked} </Text></View>
         </ScrollView>
       </View>
     );
