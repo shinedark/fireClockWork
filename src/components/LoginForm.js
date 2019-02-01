@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Text, View, Image } from 'react-native';
+import { Text,  Image, KeyboardAvoidingView } from 'react-native';
 import { Asset } from 'expo';
 import { connect } from 'react-redux';
 import { emailChanged , passwordChanged, loginUser } from '../actions';
@@ -49,7 +49,7 @@ class Loginform extends Component {
 
 	render() {
 		return (
-			<View style={styles.container}>
+			<KeyboardAvoidingView style={styles.container} behavior="padding" enabled>
 			<Text style={styles.h1}> 🔥ClOcK ⏰ </Text>
 			<Image
 				style={{width: 90, height: 90, alignSelf: 'center' ,padding: 20}}
@@ -88,7 +88,7 @@ class Loginform extends Component {
 
 				</CardSection>
 			</Card>
-			</View>
+			</KeyboardAvoidingView>
 		);
 	}
 }
