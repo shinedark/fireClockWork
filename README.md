@@ -1,6 +1,16 @@
 # fireClockWork
 
+expo link   https://exp.host/@shinedark/timerWork
+
+
 creating a punch in, punch out clock to time hours worked. Using firebase.
+
+to fix 
+1. last shift update when click time worked
+2. headers in both screen
+3.  sign out button 
+
+
 
 todo
 1. Auth ✅
