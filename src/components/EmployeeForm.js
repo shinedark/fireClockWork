@@ -21,20 +21,18 @@ export default class App extends React.Component {
   }
 
   componentWillMount(){
-    // this.displayShifts();
     this.getCurrentTime();
   }
 
   componentDidMount(){
     this.timer = setInterval(() => {
             this.getCurrentTime();
-            this.addTimes();
         }, 1000);
 
   }
 
   componentWillUnmount(){
-          clearInterval(this.timer);
+    clearInterval(this.timer);
   }
 
   // clock in function to create ref for db
@@ -160,6 +158,7 @@ export default class App extends React.Component {
             });
         });
     this.displayShiftCal()
+    this.addTimes();
   }
 
   
