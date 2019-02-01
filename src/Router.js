@@ -9,7 +9,7 @@ import EmployeeForm from './components/EmployeeForm';
 const RouterComponent = () => {
 	return (
 		<Router  >
-			<Scene key="auth" >
+			<Scene key="auth" title="Clock" >
 				<Scene key="login" component={LoginForm}/>
 			</Scene>
 			
