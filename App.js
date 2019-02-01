@@ -17,13 +17,13 @@ export default class App extends React.Component {
     storageBucket: "fireclock-24f83.appspot.com",
     messagingSenderId: "744715117658"
   };
-  firebase.initializeApp(config)
+  firebase.initializeApp(config);
   }
 
   render() {
     const store = createStore(reducers, {}, applyMiddleware(ReduxThunk));
     return (
-      <Provider store = {store} >
+      <Provider store = {store}>
         <Router/>
       </Provider>
     );
