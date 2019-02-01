@@ -6,9 +6,8 @@ expo link   https://exp.host/@shinedark/timerWork
 creating a punch in, punch out clock to time hours worked. Using firebase.
 
 to fix 
-1. last shift update when click time worked
-2. headers in both screen
-3. sign out button 
+1. headers in both screen
+2. sign out button 
 
 
 
@@ -29,5 +28,5 @@ thinng we could do
 2. move more logic to redux
 3. style better
 4. animations
-5. conditional render for time in time out 
+
 

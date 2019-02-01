@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import firebase from 'firebase';
 import { View , Text , ScrollView, TextInput } from 'react-native';
-import { CardSection , Button } from './common';
+import { CardSection , Button2 , Button } from './common';
 
 
 export default class App extends React.Component {
@@ -21,7 +21,7 @@ export default class App extends React.Component {
   }
 
   componentWillMount(){
-    this.displayShifts();
+    // this.displayShifts();
     this.getCurrentTime();
   }
 
@@ -45,6 +45,7 @@ export default class App extends React.Component {
     const currentDayClockin = this.state.currentDay;
     firebase.database().ref(`/users/${currentUser.uid}/clockIn`)
     .push({currentDayClockin, currentTimeClockIn})
+    this.shiftCalculatorIn();
   }
 
   // clock out function to create ref for db
@@ -56,13 +57,13 @@ export default class App extends React.Component {
     firebase.database().ref(`/users/${currentUser.uid}/clockOut`)
     .push({ currentDayClockOut,  currentTimeClockOut})
 
-    this.shiftCalculator();
+    this.shiftCalculatorOut();
   }
 
   // function to get ref of clockin and lock out time  set state to time in time out and work day
   // to use with add time 
 
-  shiftCalculator = () => {
+  shiftCalculatorIn = () => {
     const { currentUser } = firebase.auth();
     firebase.database().ref(`/users/${currentUser.uid}/clockIn`).orderByKey().limitToLast(1)
       .once('value', snapshot => {
@@ -73,6 +74,10 @@ export default class App extends React.Component {
             this.setState({timeIn: hourIn });
           });
       });
+  }
+
+  shiftCalculatorOut = () => {
+    const { currentUser } = firebase.auth();
     firebase.database().ref(`/users/${currentUser.uid}/clockOut`).orderByKey().limitToLast(1)
       .once('value', snapshot => {
         snapshot.forEach((childSnapshot) => {
@@ -154,6 +159,7 @@ export default class App extends React.Component {
               this.setState({shift: shiftOfWork});
             });
         });
+    this.displayShiftCal()
   }
 
   
@@ -208,23 +214,45 @@ export default class App extends React.Component {
 
     if (this.state.shift){
       return  (
-        <CardSection> 
           <Text style={styles.textS}>
-            Last Shift:{this.state.shift} 
+            Last Shift:  {this.state.shift} 
           </Text>
-        </CardSection>
       );
 
     }
     return(
-      
-      <CardSection> 
         <Text style={styles.textS}>
-          Last Shift: None 
+          Last Shift:  None 
         </Text>
-      </CardSection>
     );
-   }
+  }
+
+  renderClockIn () {
+
+    if (this.state.timeIn){
+      return  (
+        <Text style={styles.textS}>Clock In Time:  {this.state.timeIn }</Text>
+      );
+
+    }
+    return(
+      <Text style={styles.textS}>Clock In Time:</Text>
+    );
+  }
+
+  renderClockOut () {
+
+    if (this.state.timeOut){
+      return  (
+        <Text style={styles.textS}>Clock Out Time:  {this.state.timeOut }</Text>  
+      );
+
+    }
+    return(
+      <Text style={styles.textS}>Clock Out Time:</Text>  
+    );
+  }
+
 
 
   render() {
@@ -238,16 +266,14 @@ export default class App extends React.Component {
              <Text style={styles.clockS}>{ this.state.currentTime }</Text>  
           </CardSection>
           <CardSection>
-          <Button style={styles.button} onPress={this.clockIn}>Clock In</Button>
+          <Button2  onPress={this.clockIn}>Clock In</Button2>
+          <Button2  onPress={this.clockOut}>Clock Out</Button2>
           </CardSection>
           <CardSection>
-          <Button style={styles.button} onPress={this.clockOut}>Clock Out</Button>
+            {this.renderClockIn()} 
           </CardSection>
           <CardSection>
-            <Text style={styles.textC}>Clock In Time:{ this.state.timeIn }</Text>
-          </CardSection>
-          <CardSection>
-            <Text style={styles.textC}>Clock Out Time:{ this.state.timeOut }</Text>  
+            {this.renderClockOut()} 
           </CardSection>
           <CardSection>
             <Text style={styles.textS}>
@@ -256,11 +282,11 @@ export default class App extends React.Component {
           </CardSection>
           <CardSection>
             <Text style={styles.textS}>
-              Time Worked:{this.state.hoursWorked} 
+              Time Worked:  {this.state.hoursWorked} 
             </Text>
           </CardSection>
           <CardSection>
-            <Button style={styles.button} onPress={this.displayShiftCal}>See Time Worked</Button>
+            <Button style={styles.button} onPress={this.displayShifts}>See Time Worked</Button>
           </CardSection>
           <CardSection>
             {this.renderShift()}
@@ -285,15 +311,6 @@ const styles = {
       color: '#ffffff',
       flex: 1,
     },
-  button:{
-    color: '#000000',
-    borderColor: '#000000',
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: 35,
-    padding: 15
-  },
   textS:{
     fontSize: 25, 
     padding: 10
