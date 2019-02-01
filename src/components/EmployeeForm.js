@@ -1,10 +1,10 @@
 import React, { Component } from 'react';
 import firebase from 'firebase';
-import { View , Text , ScrollView, TextInput , Button } from 'react-native';
-import { CardSection, Input } from './common';
+import { View , Text , ScrollView, TextInput } from 'react-native';
+import { CardSection , Button } from './common';
 
 
-export default class EmployeeForm extends React.Component {
+export default class App extends React.Component {
 
   constructor(props) {
       super(props);
@@ -21,13 +21,14 @@ export default class EmployeeForm extends React.Component {
   }
 
   componentWillMount(){
+    this.displayShifts();
     this.getCurrentTime();
   }
 
   componentDidMount(){
-    this.displayShifts();
     this.timer = setInterval(() => {
             this.getCurrentTime();
+            this.addTimes();
         }, 1000);
 
   }
@@ -35,6 +36,8 @@ export default class EmployeeForm extends React.Component {
   componentWillUnmount(){
           clearInterval(this.timer);
   }
+
+  // clock in function to create ref for db
 
   clockIn = () => {
     const { currentUser } = firebase.auth();
@@ -44,16 +47,45 @@ export default class EmployeeForm extends React.Component {
     .push({currentDayClockin, currentTimeClockIn})
   }
 
+  // clock out function to create ref for db
+
   clockOut = () => {
     const { currentUser } = firebase.auth();
     const currentTimeClockOut = this.state.currentTime;
     const currentDayClockOut = this.state.currentDay;
     firebase.database().ref(`/users/${currentUser.uid}/clockOut`)
     .push({ currentDayClockOut,  currentTimeClockOut})
+
     this.shiftCalculator();
-    this.displayShiftCal();
-    this.addTimes();
   }
+
+  // function to get ref of clockin and lock out time  set state to time in time out and work day
+  // to use with add time 
+
+  shiftCalculator = () => {
+    const { currentUser } = firebase.auth();
+    firebase.database().ref(`/users/${currentUser.uid}/clockIn`).orderByKey().limitToLast(1)
+      .once('value', snapshot => {
+        snapshot.forEach((childSnapshot) => {
+            const childKey = childSnapshot.key;
+            const childDataClockIn = childSnapshot.val();
+            const hourIn = childDataClockIn.currentTimeClockIn;
+            this.setState({timeIn: hourIn });
+          });
+      });
+    firebase.database().ref(`/users/${currentUser.uid}/clockOut`).orderByKey().limitToLast(1)
+      .once('value', snapshot => {
+        snapshot.forEach((childSnapshot) => {
+            const childKey = childSnapshot.key;
+            const childDataClockOut = childSnapshot.val();
+            const hourOut = childDataClockOut.currentTimeClockOut;
+            const dayOfWork = childDataClockOut.currentDayClockOut;
+            this.setState({timeOut: hourOut ,  workDay: dayOfWork  });
+          });
+      });
+  }
+
+  // function to calculate  time worked 
 
   addTimes = () => {
     
@@ -96,38 +128,20 @@ export default class EmployeeForm extends React.Component {
     const totalTime = ('0' + hours).slice(-2) + ':' + ('0' + minutes).slice(-2) + ':' + ('0' + seconds).slice(-2)
 
     this.setState({hoursWorked: totalTime })
+
   }
+
+  // function to create ref for db of shift worked
 
   displayShiftCal = () => {
     const { currentUser } = firebase.auth();
     const shiftWorked =  (this.state.currentDay)  + ':' +  this.state.hoursWorked;
     firebase.database().ref(`/users/${currentUser.uid}/shift`)
     .push({ shiftWorked})
-  }
-
-  shiftCalculator = () => {
-    const { currentUser } = firebase.auth();
-    const startTime1 = firebase.database().ref(`/users/${currentUser.uid}/clockIn`).orderByKey().limitToLast(1)
-      .once('value', snapshot => {
-        snapshot.forEach((childSnapshot) => {
-            const childKey = childSnapshot.key;
-            const childDataClockIn = childSnapshot.val();
-            const hourIn = childDataClockIn.currentTimeClockIn;
-            this.setState({timeIn: hourIn });
-          });
-      });
-    const endTime1 = firebase.database().ref(`/users/${currentUser.uid}/clockOut`).orderByKey().limitToLast(1)
-      .once('value', snapshot => {
-        snapshot.forEach((childSnapshot) => {
-            const childKey = childSnapshot.key;
-            const childDataClockOut = childSnapshot.val();
-            const hourOut = childDataClockOut.currentTimeClockOut;
-            const dayOfWork = childDataClockOut.currentDayClockOut;
-            this.setState({timeOut: hourOut ,  workDay: dayOfWork  });
-          });
-      });
     
   }
+
+  // function to show last shift worked
 
   displayShifts = () => {
     const { currentUser } = firebase.auth();
@@ -141,7 +155,10 @@ export default class EmployeeForm extends React.Component {
             });
         });
   }
+
   
+  
+  // function to display current time
 
   getCurrentTime = () => {
       let hour = new Date().getHours();
@@ -185,61 +202,108 @@ export default class EmployeeForm extends React.Component {
       })        
   }
 
+  //conditionaly render the shift if empty 
+
+  renderShift () {
+
+    if (this.state.shift){
+      return  (
+        <CardSection> 
+          <Text style={styles.textS}>
+            Last Shift:{this.state.shift} 
+          </Text>
+        </CardSection>
+      );
+
+    }
+    return(
+      
+      <CardSection> 
+        <Text style={styles.textS}>
+          Last Shift: None 
+        </Text>
+      </CardSection>
+    );
+   }
+
 
   render() {
     return (
-      <View style={styles.container}>
+      <CardSection style={styles.container}>
         <ScrollView style={styles.sv}>
-          <View>
-            <Text>{ this.state.currentDay }</Text>
-             <Text>{ this.state.currentTime }</Text>  
-          </View>
-          <Button title="Clock In" onPress={this.clockIn}></Button>
-          <Button title="Clock Out" onPress={this.clockOut}></Button>
-          <View>
-            <Text>Clock In Time:{ this.state.timeIn }</Text>
-            <Text>Clock Out Time:{ this.state.timeOut }</Text>  
-          </View>
-          <View>
-            <Text>
+          <CardSection>
+            <Text style={styles.clockS}>{ this.state.currentDay }</Text>  
+          </CardSection>
+          <CardSection>
+             <Text style={styles.clockS}>{ this.state.currentTime }</Text>  
+          </CardSection>
+          <CardSection>
+          <Button style={styles.button} onPress={this.clockIn}>Clock In</Button>
+          </CardSection>
+          <CardSection>
+          <Button style={styles.button} onPress={this.clockOut}>Clock Out</Button>
+          </CardSection>
+          <CardSection>
+            <Text style={styles.textC}>Clock In Time:{ this.state.timeIn }</Text>
+          </CardSection>
+          <CardSection>
+            <Text style={styles.textC}>Clock Out Time:{ this.state.timeOut }</Text>  
+          </CardSection>
+          <CardSection>
+            <Text style={styles.textS}>
               Day Worked : {this.state.workDay}
             </Text>
-          </View>
-          <View>
-            <Text>
+          </CardSection>
+          <CardSection>
+            <Text style={styles.textS}>
               Time Worked:{this.state.hoursWorked} 
             </Text>
-          </View>
-          <View>
-            
-            <Text>
-              Last Shift:{this.state.shift} 
-            </Text>
-          </View>
+          </CardSection>
+          <CardSection>
+            <Button style={styles.button} onPress={this.displayShiftCal}>See Time Worked</Button>
+          </CardSection>
+          <CardSection>
+            {this.renderShift()}
+          </CardSection>
         </ScrollView>
-      </View>
+      </CardSection>
     );
   }
 }
 
 const styles = {
   container: {
-    padding: 10,
-    marginTop: 50,
+    paddingTop: 30,
+    marginTop: 5,
     color: '#ffffff',
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6ba9bb',
-    fontSize: 35
-
   },
   sv:{
-      padding: 30,
+      padding: 3,
       color: '#ffffff',
       flex: 1,
-    }
+    },
+  button:{
+    color: '#000000',
+    borderColor: '#000000',
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    fontSize: 35,
+    padding: 15
+  },
+  textS:{
+    fontSize: 25, 
+    padding: 10
+  },
+  textC:{
+    fontSize: 15, 
+    padding: 10
+  },
+  clockS:{
+    fontSize: 55, 
+    padding: 10
+  }
 };
-
-
-
