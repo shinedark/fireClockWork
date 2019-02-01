@@ -14,6 +14,8 @@ export default class EmployeeForm extends React.Component {
        hoursWorked: 0,
        timeOut: 0,
        timeIn: 0,
+       workDay: '',
+       shift: '',
     }
     this.daysArray = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
   }
@@ -23,10 +25,9 @@ export default class EmployeeForm extends React.Component {
   }
 
   componentDidMount(){
-
+    this.displayShifts();
     this.timer = setInterval(() => {
             this.getCurrentTime();
-            this.addTimes();
         }, 1000);
 
   }
@@ -38,43 +39,26 @@ export default class EmployeeForm extends React.Component {
   clockIn = () => {
     const { currentUser } = firebase.auth();
     const currentTimeClockIn = this.state.currentTime;
+    const currentDayClockin = this.state.currentDay;
     firebase.database().ref(`/users/${currentUser.uid}/clockIn`)
-    .push({ currentTimeClockIn})
-    firebase.database().ref(`/users/${currentUser.uid}/clockIn`).orderByKey().limitToLast(1)
-      .once('value', snapshot => {
-        snapshot.forEach((childSnapshot) => {
-            const childKey = childSnapshot.key;
-            const childDataClockIn = childSnapshot.val();
-            const hourIn = childDataClockIn.currentTimeClockIn;
-            this.setState({timeIn: hourIn });
-            
-            
-          });
-      });
+    .push({currentDayClockin, currentTimeClockIn})
   }
 
   clockOut = () => {
     const { currentUser } = firebase.auth();
     const currentTimeClockOut = this.state.currentTime;
+    const currentDayClockOut = this.state.currentDay;
     firebase.database().ref(`/users/${currentUser.uid}/clockOut`)
-    .push({ currentTimeClockOut})
-    firebase.database().ref(`/users/${currentUser.uid}/clockOut`).orderByKey().limitToLast(1)
-      .once('value', snapshot => {
-        snapshot.forEach((childSnapshot) => {
-            const childKey = childSnapshot.key;
-            const childDataClockOut = childSnapshot.val();
-            const hourOut = childDataClockOut.currentTimeClockOut;
-            this.setState({timeOut: hourOut });
-
-            // console.log(hourOut);
-          });
-      });
+    .push({ currentDayClockOut,  currentTimeClockOut})
+    this.shiftCalculator();
+    this.displayShiftCal();
+    this.addTimes();
   }
 
   addTimes = () => {
+    
     const startTime = this.state.timeIn;
     const endTime = this.state.timeOut;
-    
     
     var times = [ 0, 0, 0 ]
     var max = times.length
@@ -113,10 +97,53 @@ export default class EmployeeForm extends React.Component {
 
     this.setState({hoursWorked: totalTime })
   }
+
+  displayShiftCal = () => {
+    const { currentUser } = firebase.auth();
+    const shiftWorked =  (this.state.currentDay)  + ':' +  this.state.hoursWorked;
+    firebase.database().ref(`/users/${currentUser.uid}/shift`)
+    .push({ shiftWorked})
+  }
+
+  shiftCalculator = () => {
+    const { currentUser } = firebase.auth();
+    const startTime1 = firebase.database().ref(`/users/${currentUser.uid}/clockIn`).orderByKey().limitToLast(1)
+      .once('value', snapshot => {
+        snapshot.forEach((childSnapshot) => {
+            const childKey = childSnapshot.key;
+            const childDataClockIn = childSnapshot.val();
+            const hourIn = childDataClockIn.currentTimeClockIn;
+            this.setState({timeIn: hourIn });
+          });
+      });
+    const endTime1 = firebase.database().ref(`/users/${currentUser.uid}/clockOut`).orderByKey().limitToLast(1)
+      .once('value', snapshot => {
+        snapshot.forEach((childSnapshot) => {
+            const childKey = childSnapshot.key;
+            const childDataClockOut = childSnapshot.val();
+            const hourOut = childDataClockOut.currentTimeClockOut;
+            const dayOfWork = childDataClockOut.currentDayClockOut;
+            this.setState({timeOut: hourOut ,  workDay: dayOfWork  });
+          });
+      });
+    
+  }
+
+  displayShifts = () => {
+    const { currentUser } = firebase.auth();
+    firebase.database().ref(`/users/${currentUser.uid}/shift`).orderByKey().limitToLast(1)
+        .once('value', snapshot => {
+          snapshot.forEach((childSnapshot) => {
+              const childKey = childSnapshot.key;
+              const childDataShift = childSnapshot.val();
+              const shiftOfWork = childDataShift.shiftWorked;
+              this.setState({shift: shiftOfWork});
+            });
+        });
+  }
   
 
-  getCurrentTime = () =>
-  {
+  getCurrentTime = () => {
       let hour = new Date().getHours();
       let minutes = new Date().getMinutes();
       let seconds = new Date().getSeconds();
@@ -173,7 +200,22 @@ export default class EmployeeForm extends React.Component {
             <Text>Clock In Time:{ this.state.timeIn }</Text>
             <Text>Clock Out Time:{ this.state.timeOut }</Text>  
           </View>
-          <View><Text>Time Worked:{this.state.hoursWorked} </Text></View>
+          <View>
+            <Text>
+              Day Worked : {this.state.workDay}
+            </Text>
+          </View>
+          <View>
+            <Text>
+              Time Worked:{this.state.hoursWorked} 
+            </Text>
+          </View>
+          <View>
+            
+            <Text>
+              Last Shift:{this.state.shift} 
+            </Text>
+          </View>
         </ScrollView>
       </View>
     );
@@ -188,7 +230,8 @@ const styles = {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#6ba9bb'
+    backgroundColor: '#6ba9bb',
+    fontSize: 35
 
   },
   sv:{
