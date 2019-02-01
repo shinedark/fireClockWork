@@ -1,10 +1,16 @@
 import React, { Component } from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, Image } from 'react-native';
+import { Asset } from 'expo';
 import { connect } from 'react-redux';
 import { emailChanged , passwordChanged, loginUser } from '../actions';
 import { Card, CardSection, Input, Button, Spinner } from './common';
 
 class Loginform extends Component {
+
+	async componentDidMount() {
+	  this._cacheResourcesAsync();
+	}
+
 	onEmailChange(text){
 		this.props.emailChanged(text);
 	}
@@ -31,9 +37,24 @@ class Loginform extends Component {
 		);
 	}
 
+	async _cacheResourcesAsync() {
+	    const images = [
+	      require('../../assets/icon.png'),
+	    ];
+	    const cacheImages = images.map((image) => {
+	      return Asset.fromModule(image).downloadAsync();
+	    });
+	    return Promise.all(cacheImages)
+	}
+
 	render() {
 		return (
 			<View style={styles.container}>
+			<Text style={styles.h1}> Fire Clock </Text>
+			<Image
+				style={{width: 90, height: 90, alignSelf: 'center' ,padding: 20}}
+				source={require('../../assets/icon.png')} 
+			/>
 			<Card>
 				<CardSection>
 					<Input
@@ -82,7 +103,16 @@ const styles = {
 	container: {
 	    flex: 1,
 	    justifyContent: 'center',
-	  },
+	},
+	h1:{
+		fontSize: 50,
+		alignSelf: 'center',
+		padding: 20,
+		textShadowColor: '#ffeb00',
+		textShadowOffset: {width: -1, height: 1},
+		textShadowRadius: 10,
+		color: '#e40d0d',
+	}
 };
 
 const mapStateToProps = ({auth}) => {
