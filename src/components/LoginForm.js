@@ -50,7 +50,7 @@ class Loginform extends Component {
 	render() {
 		return (
 			<View style={styles.container}>
-			<Text style={styles.h1}> Fire Clock </Text>
+			<Text style={styles.h1}> 🔥ClOcK ⏰ </Text>
 			<Image
 				style={{width: 90, height: 90, alignSelf: 'center' ,padding: 20}}
 				source={require('../../assets/icon.png')} 
