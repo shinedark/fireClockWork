@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import firebase from 'firebase';
-import { View , Text , ScrollView, TextInput } from 'react-native';
+import { Animated,View , Text , ScrollView, TextInput, Easing } from 'react-native';
 import { CardSection , Button2 , Button } from './common';
 
 
@@ -16,8 +16,10 @@ export default class App extends React.Component {
        timeIn: 0,
        workDay: '',
        shift: '',
+       
     }
     this.daysArray = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+    this.animatedValue = new Animated.Value(0);
   }
 
   componentWillMount(){
@@ -25,6 +27,7 @@ export default class App extends React.Component {
   }
 
   componentDidMount(){
+                        
     this.timer = setInterval(() => {
             this.getCurrentTime();
         }, 1000);
@@ -33,6 +36,18 @@ export default class App extends React.Component {
 
   componentWillUnmount(){
     clearInterval(this.timer);
+  }
+
+  animate () {
+    this.animatedValue.setValue(0)
+    Animated.timing(
+      this.animatedValue,
+      {
+        toValue: 1,
+        duration: 600,
+        easing: Easing.linear
+      }
+    ).start();
   }
 
   // clock in function to create ref for db
@@ -44,6 +59,7 @@ export default class App extends React.Component {
     firebase.database().ref(`/users/${currentUser.uid}/clockIn`)
     .push({currentDayClockin, currentTimeClockIn})
     this.shiftCalculatorIn();
+    this.animate();
   }
 
   // clock out function to create ref for db
@@ -54,7 +70,7 @@ export default class App extends React.Component {
     const currentDayClockOut = this.state.currentDay;
     firebase.database().ref(`/users/${currentUser.uid}/clockOut`)
     .push({ currentDayClockOut,  currentTimeClockOut})
-
+    this.animate();
     this.shiftCalculatorOut();
   }
 
@@ -255,6 +271,10 @@ export default class App extends React.Component {
 
 
   render() {
+    const rotateX = this.animatedValue.interpolate({
+        inputRange: [0, 0.5, 1],
+        outputRange: ['0deg', '180deg', '360deg']
+      })
     return (
       <CardSection style={styles.container}>
         <ScrollView style={styles.sv}>
@@ -262,7 +282,7 @@ export default class App extends React.Component {
             <Text style={styles.clockS}>{ this.state.currentDay }</Text>  
           </CardSection>
           <CardSection>
-             <Text style={styles.clockS}>{ this.state.currentTime }</Text>  
+             <Animated.Text style={{transform: [{rotateX}],  fontSize: 55, padding: 10}}>{ this.state.currentTime }</Animated.Text>  
           </CardSection>
           <CardSection>
           <Button2  onPress={this.clockIn}>Clock In</Button2>
