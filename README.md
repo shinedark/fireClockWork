@@ -8,6 +8,10 @@ creating a punch in, punch out clock to time hours worked. Using firebase.
 to fix 
 1. headers in both screen
 2. sign out button 
+3. do some method that if you where clocked in before you can see time. currently if  you hit clock out it will work but clock in time is not displayed.
+4. fix how time is added
+5. display shift button has to be hit twice to show real time worked
+6. see how you can only display positive numbers no negative
 
 
 
@@ -27,6 +31,6 @@ thinng we could do
 1. refactor to make it more clean and readable
 2. move more logic to redux
 3. style better
-4. animations
+
 
 
