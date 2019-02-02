@@ -32,5 +32,7 @@ thinng we could do
 2. move more logic to redux
 3. style better
 
+🔥⏰
+
 
 
