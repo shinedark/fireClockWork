@@ -32,7 +32,10 @@ thinng we could do
 2. move more logic to redux
 3. style better
 
+<<<<<<< HEAD
 🔥⏰
 
+=======
+>>>>>>> 1b93977b4ed6579d99efa730bada1d3fa1f99d8d
 
 
