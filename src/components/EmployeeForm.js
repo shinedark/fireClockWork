@@ -163,6 +163,9 @@ export default class App extends React.Component {
   // function to show last shift worked
 
   displayShifts = () => {
+    this.displayShiftCal()
+    this.addTimes();
+
     const { currentUser } = firebase.auth();
     firebase.database().ref(`/users/${currentUser.uid}/shift`).orderByKey().limitToLast(1)
         .once('value', snapshot => {
@@ -173,8 +176,6 @@ export default class App extends React.Component {
               this.setState({shift: shiftOfWork});
             });
         });
-    this.displayShiftCal()
-    this.addTimes();
   }
 
   
